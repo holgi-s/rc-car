@@ -1,0 +1,13 @@
+<?xml version="1.0" standalone='no'?>
+<!DOCTYPE service-group SYSTEM "avahi-service.dtd">
+<service-group>
+  <name>RC SERVER</name>
+  <service>
+    <type>_rcserver._tcp</type>
+    <port>9090</port>
+  </service>
+  <service>
+    <type>_rcvideo._tcp</type>
+    <port>5001</port>
+</service>
+</service-group>
