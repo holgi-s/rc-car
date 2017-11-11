@@ -3,6 +3,4 @@ RCClient/\.idea/
 
 RCServer/bin/
 
-*.apk
-
 RCClient/gradle\.properties
