@@ -13,14 +13,22 @@
 class CUDPServer {
 
 public:
-    CUDPServer(unsigned short port, const std::function<void(const std::vector<uint8_t>&)>& reader);
+    CUDPServer(unsigned short port,
+               const std::function<void(const std::vector<uint8_t>&)>& onDataPacket,
+               const std::function<void(void)>& onIdle = nullptr);
+
     void Close();
 
 private:
-    bool startServer(unsigned short port, const std::function<void(const std::vector<uint8_t>&)>& reader);
-    std::thread startServerAsync(unsigned short port, const std::function<void(const std::vector<uint8_t>&)>& reader);
+    bool startServer(unsigned short port,
+                     const std::function<void(const std::vector<uint8_t>&)>& onDataPacket,
+                     const std::function<void(void)>& onIdle = nullptr);
 
-    void readPacket(int serverSocket, const std::function<void(const std::vector<uint8_t> &)> &reader);
+    std::thread startServerAsync(unsigned short port,
+                                 const std::function<void(const std::vector<uint8_t>&)>& onDataPacket,
+                                 const std::function<void(void)>& onIdle = nullptr);
+
+    void readPacket(int serverSocket, const std::function<void(const std::vector<uint8_t> &)> &onDataPacket);
 
     int serverSocket = 0;
     int cancelSocket = 0;

@@ -14,20 +14,30 @@
 # include <netinet/in.h>
 # include <unistd.h>
 
-CUDPServer::CUDPServer(unsigned short port, const std::function<void(const std::vector<uint8_t>&)>& reader){
+#define UDP_DATA_TIMEOUT_SEC 0
+#define UDP_DATA_TIMEOUT_USEC 500000
+
+
+CUDPServer::CUDPServer(unsigned short port,
+                       const std::function<void(const std::vector<uint8_t>&)>& onDataPacket,
+                       const std::function<void(void)>& onIdle) {
     cancelSocket = NotificationSocket::Create();
     buffer.reserve(packetSize);
-    serverThread = startServerAsync(port, reader);
+    serverThread = startServerAsync(port, onDataPacket, onIdle);
 }
 
 
-std::thread CUDPServer::startServerAsync(unsigned short port, const std::function<void(const std::vector<uint8_t>&)>& reader) {
+std::thread CUDPServer::startServerAsync(unsigned short port,
+                                         const std::function<void(const std::vector<uint8_t>&)>& onDataPacket,
+                                         const std::function<void(void)>& onIdle) {
     return std::thread([=]() {
-        startServer(port, reader);
+        startServer(port, onDataPacket, onIdle);
     });
 }
 
-bool CUDPServer::startServer(unsigned short port, const std::function<void(const std::vector<uint8_t>&)>& reader) {
+bool CUDPServer::startServer(unsigned short port,
+                             const std::function<void(const std::vector<uint8_t>&)>& onDataPacket,
+                             const std::function<void(void)>& onIdle) {
 
     std::cout << "CUDPServer::startServer - creating server socket on port " << port << std::endl;
 
@@ -49,8 +59,8 @@ bool CUDPServer::startServer(unsigned short port, const std::function<void(const
     fd_set readFds;
 
     struct timeval tv;
-    tv.tv_sec = 5;
-    tv.tv_usec = 0;
+    tv.tv_sec = UDP_DATA_TIMEOUT_SEC;
+    tv.tv_usec = UDP_DATA_TIMEOUT_USEC;
 
 
     int selectSocket = std::max<int>(serverSocket, cancelSocket) + 1;
@@ -64,21 +74,25 @@ bool CUDPServer::startServer(unsigned short port, const std::function<void(const
             FD_SET(cancelSocket, &readFds);
         }
 
-        tv.tv_sec = 5;
-        tv.tv_usec = 0;
+        tv.tv_sec = UDP_DATA_TIMEOUT_SEC;
+        tv.tv_usec = UDP_DATA_TIMEOUT_USEC;
 
-        if(int activity = select(selectSocket, &readFds, nullptr, nullptr, &tv)) {
-
+        int activity = select(selectSocket, &readFds, nullptr, nullptr, &tv);
+        if(activity > 0) {
             if (FD_ISSET(cancelSocket, &readFds)) {
                 std::cerr << "CUDPServer::startServer - read set cancelSocket!" << std::endl;
                 break;
+            } else if (FD_ISSET(serverSocket, &readFds)) {
+                std::cout << "CUDPServer::startServer - read set serverSocket!" << std::endl;
+                readPacket(serverSocket, onDataPacket);
             }
-
-            if (FD_ISSET(serverSocket, &readFds)) {
-                std::cerr << "CUDPServer::startServer - read set serverSocket!" << std::endl;
-
-                readPacket(serverSocket, reader);
+        } else if (activity == 0) {
+            std::cout << "CUDPServer::startServer - timeout!" << std::endl;
+            if(onIdle) {
+                onIdle();
             }
+        } else {
+            std::cerr << "CUDPServer::startServer - error: " << errno << std::endl;
         }
     }
 
@@ -98,7 +112,7 @@ void CUDPServer::Close() {
     serverThread.join();
 }
 
-void CUDPServer::readPacket(int serverSocket, const std::function<void(const std::vector<uint8_t> &)> &reader) {
+void CUDPServer::readPacket(int serverSocket, const std::function<void(const std::vector<uint8_t> &)> &onDataPacket) {
 
     struct sockaddr_in cliAddr;
     socklen_t cliLen = sizeof(cliAddr);
@@ -111,6 +125,6 @@ void CUDPServer::readPacket(int serverSocket, const std::function<void(const std
     if (int read = recvfrom(serverSocket, (char *) &buffer[0], packetSize, 0, (struct sockaddr *) &cliAddr, &cliLen)) {
 
         buffer.resize(read);
-        reader(buffer);
+        onDataPacket(buffer);
     }
 }

@@ -4,3 +4,11 @@ RCClient/\.idea/
 RCServer/bin/
 
 RCClient/gradle\.properties
+
+*.cmake
+
+RCServer/CMakeCache\.txt
+
+RCServer/CMakeFiles/
+
+RCServer/Makefile
