@@ -9,8 +9,8 @@
 
 class RCData;
 
-#define LED_MASK_LEFT           0x01
-#define LED_MASK_RIGHT          0x02
+#define LED_BOTH_LEFT           0x01
+#define LED_BOTH_RIGHT          0x02
 
 #define GPIO_MOTOR_PWM_LEFT     20
 #define GPIO_MOTOR_CTRL1_LEFT   5

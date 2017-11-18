@@ -42,6 +42,7 @@ void CarController::setup()
 
     set_PWM_frequency(_fd, GPIO_MOTOR_PWM_LEFT, 100); //set pwm freq to 100Hz
     set_PWM_frequency(_fd, GPIO_MOTOR_PWM_RIGHT, 100);
+
     set_PWM_range(_fd, GPIO_MOTOR_PWM_LEFT, 100);    //pwm range 0-100
     set_PWM_range(_fd, GPIO_MOTOR_PWM_RIGHT, 100);
 }
@@ -63,7 +64,7 @@ void CarController::Led(uint8_t ledMask)
 {
     //LED Right
 
-    if(ledMask & LED_MASK_RIGHT) {
+    if(ledMask & LED_BOTH_RIGHT) {
         gpio_write(_fd, GPIO_LED_TOP_RIGHT, 1);
         gpio_write(_fd, GPIO_LED_BOTTOM_RIGHT, 1);
     } else {
@@ -71,7 +72,7 @@ void CarController::Led(uint8_t ledMask)
         gpio_write(_fd, GPIO_LED_BOTTOM_RIGHT, 0);
     }
 
-    if(ledMask & LED_MASK_LEFT) {
+    if(ledMask & LED_BOTH_LEFT) {
         gpio_write(_fd, GPIO_LED_TOP_LEFT, 1);
         gpio_write(_fd, GPIO_LED_BOTTOM_LEFT, 1);
     } else {
@@ -90,8 +91,8 @@ void CarController::Motor(int8_t left, int8_t right)
         gpio_write(_fd, GPIO_MOTOR_CTRL1_LEFT, 0);
         gpio_write(_fd, GPIO_MOTOR_CTRL2_LEFT, 1);
     } else {
-        //gpio_write(_fd, GPIO_MOTOR_CTRL1_LEFT, 0);
-        //gpio_write(_fd, GPIO_MOTOR_CTRL2_LEFT, 0);
+        gpio_write(_fd, GPIO_MOTOR_CTRL1_LEFT, 0);
+        gpio_write(_fd, GPIO_MOTOR_CTRL2_LEFT, 0);
     }
 
     if (right > 0) {
@@ -101,8 +102,8 @@ void CarController::Motor(int8_t left, int8_t right)
         gpio_write(_fd, GPIO_MOTOR_CTRL1_RIGHT, 0);
         gpio_write(_fd, GPIO_MOTOR_CTRL2_RIGHT, 1);
     } else {
-        //gpio_write(_fd, GPIO_MOTOR_CTRL1_RIGHT, 0);
-        //gpio_write(_fd, GPIO_MOTOR_CTRL2_RIGHT, 0);
+        gpio_write(_fd, GPIO_MOTOR_CTRL1_RIGHT, 0);
+        gpio_write(_fd, GPIO_MOTOR_CTRL2_RIGHT, 0);
     }
 
     left = abs(left);
@@ -122,6 +123,7 @@ void CarController::Stop()
 
     gpio_write(_fd, GPIO_MOTOR_CTRL1_LEFT, 0);
     gpio_write(_fd, GPIO_MOTOR_CTRL2_LEFT, 0);
+
     gpio_write(_fd, GPIO_MOTOR_CTRL1_RIGHT, 0);
     gpio_write(_fd, GPIO_MOTOR_CTRL2_RIGHT, 0);
 }

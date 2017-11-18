@@ -25,7 +25,8 @@ static bool toggle = false;
 
 void processIdle(CarController& car) {
     car.Stop();
-    car.Led(toggle ? LED_MASK_LEFT : LED_MASK_RIGHT);
+    car.Led(toggle ? LED_BOTH_LEFT : LED_BOTH_RIGHT);
+    toggle = !toggle;
 }
 
 int main() {
@@ -41,6 +42,9 @@ int main() {
     CUDPServer udp(port, [&car](const std::vector<uint8_t>& packet) {
         std::cout << "UDP Packet: ";
         processPacket(car, packet);
+    }, [&car](){
+        std::cout << "Idle Timeout: ";
+        processIdle(car);
     });
 
     std::cout << "Type x [Enter] to exit" << std::endl;
